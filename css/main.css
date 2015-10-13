@@ -130,6 +130,7 @@ textarea {
 @media (max-width: 768px) {
 	#date-label{
 		font-size: 1em;
+		padding: 10px;
 	}
 	
 	.chart-column {

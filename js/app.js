@@ -42,11 +42,11 @@ var app = {
 		var minDate = this.getMinDate(data).format("YYYY");
 		var maxDate = this.getMaxDate(data).format("YYYY");
 		$("#slider div").remove();
-		var dateSlider = d3.slider(maxDate).on("slide", function(evt, value) {
+		this.dateSlider = this.dateSlider || d3.slider(maxDate).on("slide", function(evt, value) {
 							app.updateFromSliderValue(value, data);
 						}).axis(true).min(minDate).max(maxDate)
-		d3.select('#slider').append("div").call(dateSlider);
-		app.updateFromSliderValue(dateSlider.value(), data);
+		d3.select('#slider').append("div").call(this.dateSlider);
+		this.updateFromSliderValue(this.dateSlider.value(), data);
 	},
 
 	updateFromSliderValue: function(value, data){
@@ -76,7 +76,7 @@ var app = {
 	},
 	
 	getHeight: function(){
-		return this.getWidth();
+		return this.getWidth() * 1.3;
 	},
 	
 	renderPieChart: function(data){		
@@ -172,6 +172,7 @@ var app = {
 	
 	renderMap: function(data){
 		d3.select("#main").select("svg").remove();	
+		var scale = $(window).width() < 768 ? 300 : 420;
 		this.map = new Datamap({
 		        scope: 'world',
 		        element: $('#main')[0],
@@ -179,7 +180,7 @@ var app = {
 				    var projection = d3.geo.equirectangular()
 				      .center([65, 18])
 				      .rotate([4.4, 0])
-				      .scale(370)
+				      .scale(scale)
 				      .translate([element.offsetWidth / 2, element.offsetHeight / 2]);
 				    var path = d3.geo.path()
 				      .projection(projection);
