@@ -4,10 +4,6 @@ var app = {
 		this.getDroneData();
 	},
 	
-	disableLoadingState: function(){
-		$("#loader").hide();
-	},
-	
 	getDroneData: function(){
 		$.ajax({
 		   type: 'GET',
@@ -29,7 +25,7 @@ var app = {
 		this.renderMap(data);
 		this.initializeSlider(data);
 		this.disableLoadingState();
-		this.bindUpdateMapAndChartOnResize();		
+		this.bindUpdateMapAndChartOnResize(data);		
 	},
 		
 	getMinDate: function(data){		
@@ -45,12 +41,14 @@ var app = {
 	initializeSlider: function(data){		
 		var minDate = this.getMinDate(data).format("YYYY");
 		var maxDate = this.getMaxDate(data).format("YYYY");
-		d3.select('#slider').call(d3.slider(maxDate).on("slide", function(evt, value) {
-			app.updateFromSliderValue(value, data);
-		}).axis(true).min(minDate).max(maxDate));
-		app.updateFromSliderValue(minDate, data);
+		$("#slider div").remove();
+		var dateSlider = d3.slider(maxDate).on("slide", function(evt, value) {
+							app.updateFromSliderValue(value, data);
+						}).axis(true).min(minDate).max(maxDate)
+		d3.select('#slider').append("div").call(dateSlider);
+		app.updateFromSliderValue(dateSlider.value(), data);
 	},
-	
+
 	updateFromSliderValue: function(value, data){
 		var year = Math.floor(value);
 		var months = Math.floor((value - year) * 12) + 1;
@@ -60,9 +58,16 @@ var app = {
 		this.renderAll(this.latest_strikes, this.latest_date);
 	},
 	
-	bindUpdateMapAndChartOnResize: function(){
+	disableLoadingState: function(){
+		$("#loader").hide();
+	},
+	
+	
+	bindUpdateMapAndChartOnResize: function(data){
 		$(window).on('resize', function(){
-			app.renderAll(app.latest_strikes, app.latest_date);
+			app.renderMap(data);
+			app.renderAll(app.latest_strikes, app.latest_date);		
+			app.initializeSlider(data);
 		})
 	},
 	
@@ -158,7 +163,7 @@ var app = {
 	},
 	
 	calculateRadius: function(currentTotal, eventualTotal){
-		return 50 + (((this.getWidth() / 2) - 50)  * (currentTotal / eventualTotal));
+		return eventualTotal == 0 ? 50 : 50 + (((this.getWidth() / 2) - 50)  * (currentTotal / eventualTotal));
 	},	
 	
 	removePreviousPieChart: function(){
@@ -166,23 +171,23 @@ var app = {
 	},	
 	
 	renderMap: function(data){
+		d3.select("#main").select("svg").remove();	
 		this.map = new Datamap({
 		        scope: 'world',
-		        element: document.getElementById('main'),
+		        element: $('#main')[0],
 				setProjection: function(element) {
 				    var projection = d3.geo.equirectangular()
-				      .center([65, 15])
+				      .center([65, 18])
 				      .rotate([4.4, 0])
-				      .scale(app.getWidth())
+				      .scale(370)
 				      .translate([element.offsetWidth / 2, element.offsetHeight / 2]);
 				    var path = d3.geo.path()
 				      .projection(projection);
 				    return {path: path, projection: projection};
-				  },
+				 },
 		        height: this.getHeight(),
 		 
-		});		
-		//app.stepThroughDates(data);		
+		});			
 	},
 	
 	prepareData: function(strikes){		
@@ -203,23 +208,7 @@ var app = {
 			}
 		});
 		return _.compact(mappedData);
-	},
-	
-	stepThroughDates: function(data){
-		this.getNextDate(this.getMinDate(), this.getMaxDate(), data);
-	},
-	
-	getNextDate: function(date, max, data){
-		this.latest_strikes = this.forDate(date, data);
-		this.latest_date = date;
-		this.renderAll(this.latest_strikes, this.latest_date);
-		if (date.format("X") < max.format("X")){
-			var tomorrow = date.add(1,'months');
-			setTimeout(function(){
-				app.getNextDate(tomorrow,max, data)
-				}, 300);
-		}
-	},
+	},	
 	
 	renderAll: function(strikes, date){
 		this.renderBubbles(strikes);
@@ -233,7 +222,7 @@ var app = {
 			    popupTemplate: function (geo, strike) { 
 			            return ['<div class="hoverinfo">' +  strike.name,
 			            '<br/>Country: ' +  strike.country + '',
-			            '<br/>Date: ' +  strike.date.format("MM/DD/YY") + '',
+			            '<br/>Date: ' +  moment(strike.date).format("MM/DD/YY") + '',
 			            '</div>'].join('');
 					}
 				});
@@ -254,15 +243,15 @@ var app = {
 	},
 	
 	parseMinDeaths: function(strike){
-		var min_deaths = parseInt(strike.deaths_min);
-		if (isNaN(strike.deaths_min)){
-			min_deaths = 0;
+		var deaths_min = parseInt(strike.deaths_min);
+		if (isNaN(deaths_min)){
+			deaths_min = 0;
 		}
-		return min_deaths;
+		return deaths_min;
 	},
 	
 	updateDateLabel: function(date){
-		$("#date-label").html("Drone Strike Casualties As Of " + date.format("MM/YYYY"))
+		$("#date-label").html("Drone Strike Deaths As Of " + date.format("MM/YYYY"))
 	},
 	
 	
@@ -280,7 +269,7 @@ var app = {
 	
 	getTotalDeaths: function(data){
 		return _.reduce(data,function(total,strike){
-			return (strike.deaths_min) ? total + strike.deaths_min : total;
+			return (strike.min_deaths) ? total + strike.min_deaths : total;
 		}, 0);
 	}
 	

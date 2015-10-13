@@ -109,6 +109,11 @@ textarea {
 	width: 100%;
 }
 
+#slider {
+	padding: 10px 20px 20px 20px;
+	overflow: hidden;
+}
+
 #date-label {
 	text-align: center;
 	padding: 20px;
@@ -123,18 +128,18 @@ textarea {
 
 
 @media (max-width: 768px) {
+	#date-label{
+		font-size: 1em;
+	}
+	
 	.chart-column {
 		width: 100%;
 	}
+	#chart {
+		width: 50%;
+		margin: 0 25%;
+	}
 }	
-
-
-
-
-
-
-
-
 
 
 
