@@ -109,8 +109,16 @@ textarea {
 	width: 100%;
 }
 
+#date-label {
+	text-align: center;
+	padding: 20px;
+	font-size: 2em;
+}
+
 .chart-column {
-	width: 50%; float:left;
+	width: 50%; 
+	float:left;
+	position: relative;
 }
 
 
